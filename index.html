@@ -260,6 +260,7 @@
         // Configuration
         const API_ENDPOINT = '/api/orders'; // Change this to your actual API endpoint
         const LIFF_ID = '2007830457-paKG0bb6'; // Change this to your actual LIFF ID
+        const TEST_MODE = true; // Set to false when deploying to production
 
         // Sample menu data - replace with your actual menu
         const MENU_ITEMS = [
@@ -277,6 +278,22 @@
 
         // Initialize LIFF
         async function initializeLiff() {
+            // Test mode - bypass LIFF for development
+            if (TEST_MODE) {
+                console.log('Running in TEST MODE - LIFF bypassed');
+                userProfile = {
+                    userId: 'test-user-001',
+                    displayName: 'ผู้ใช้ทดสอบ',
+                    pictureUrl: ''
+                };
+                document.getElementById('userInfo').textContent = `สวัสดี, ${userProfile.displayName} (TEST MODE)`;
+                initializeMenu();
+                document.getElementById('loadingSection').style.display = 'none';
+                document.getElementById('menuSection').style.display = 'block';
+                document.getElementById('submitSection').style.display = 'block';
+                return;
+            }
+
             try {
                 console.log('Starting LIFF initialization...');
                 await liff.init({ liffId: LIFF_ID });
