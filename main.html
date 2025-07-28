@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สั่งขนมปังฮาลาล</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            max-width: 400px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .container {
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #06C755 0%, #00B900 100%);
+            color: white;
+            padding: 20px 16px;
+            margin: -16px -16px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .user-info {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .menu-grid {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .menu-card:active {
+            transform: scale(0.98);
+        }
+
+        .menu-card.has-items {
+            box-shadow: 0 4px 12px rgba(6, 199, 85, 0.3);
+            border: 2px solid #06C755;
+        }
+
+        .menu-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background-color: #f0f0f0;
+        }
+
+        .menu-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .menu-price {
+            font-size: 16px;
+            color: #06C755;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: white;
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .qty-btn:hover {
+            background: #06C755;
+            color: white;
+        }
+
+        .qty-btn:active {
+            transform: scale(0.9);
+        }
+
+        .qty-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .qty-display {
+            font-size: 18px;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .submit-section {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #06C755 0%, #00B900 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(6, 199, 85, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 199, 85, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .toast.show {
+            opacity: 0.9;
+        }
+
+        .toast.error {
+            background: #ff4444;
+        }
+
+        .toast.success {
+            background: #06C755;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #06C755;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>สั่งขนมปังฮาลาล 🍞</h1>
+            <div class="user-info" id="userInfo">กำลังโหลด...</div>
+        </div>
+
+        <div id="loadingSection" class="loading">
+            <div class="spinner"></div>
+            <p>กำลังโหลดข้อมูล...</p>
+        </div>
+
+        <div id="menuSection" style="display: none;">
+            <div class="menu-grid" id="menuGrid"></div>
+        </div>
+    </div>
+
+    <div class="submit-section" id="submitSection" style="display: none;">
+        <button class="submit-btn" id="submitBtn" onclick="submitOrder()">
+            ส่งออเดอร์ (0 รายการ)
+        </button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Configuration
+        const API_ENDPOINT = '/api/orders'; // Change this to your actual API endpoint
+        const LIFF_ID = 'YOUR-LIFF-ID'; // Change this to your actual LIFF ID
+
+        // Sample menu data - replace with your actual menu
+        const MENU_ITEMS = [
+            { id: 1, name: 'ขนมปังโฮลวีต', price: 35, image: '' },
+            { id: 2, name: 'ขนมปังข้าวโพด', price: 40, image: '' },
+            { id: 3, name: 'ขนมปังมัลติเกรน', price: 45, image: '' },
+            { id: 4, name: 'ขนมปังน้ำผึ้ง', price: 38, image: '' },
+            { id: 5, name: 'ขนมปังถั่วแดง', price: 42, image: '' },
+            { id: 6, name: 'ขนมปังเนยสด', price: 35, image: '' }
+        ];
+
+        // Global state
+        let userProfile = null;
+        let orderData = {};
+
+        // Initialize LIFF
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                    return;
+                }
+
+                // Get user profile
+                userProfile = await liff.getProfile();
+                document.getElementById('userInfo').textContent = `สวัสดี, ${userProfile.displayName}`;
+                
+                // Initialize menu
+                initializeMenu();
+                
+                // Hide loading, show menu
+                document.getElementById('loadingSection').style.display = 'none';
+                document.getElementById('menuSection').style.display = 'block';
+                document.getElementById('submitSection').style.display = 'block';
+                
+            } catch (error) {
+                console.error('LIFF initialization failed', error);
+                showToast('เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+            }
+        }
+
+        // Initialize menu display
+        function initializeMenu() {
+            const menuGrid = document.getElementById('menuGrid');
+            
+            MENU_ITEMS.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'menu-card';
+                card.id = `menu-${item.id}`;
+                
+                card.innerHTML = `
+                    ${item.image ? `<img src="${item.image}" alt="${item.name}" class="menu-image">` : ''}
+                    <div class="menu-name">${item.name}</div>
+                    <div class="menu-price">฿${item.price}</div>
+                    <div class="quantity-control">
+                        <button class="qty-btn" onclick="updateQuantity(${item.id}, -1)">−</button>
+                        <div class="qty-display" id="qty-${item.id}">0</div>
+                        <button class="qty-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                    </div>
+                `;
+                
+                menuGrid.appendChild(card);
+            });
+        }
+
+        // Update quantity
+        function updateQuantity(itemId, change) {
+            const currentQty = orderData[itemId] || 0;
+            const newQty = Math.max(0, currentQty + change);
+            
+            if (newQty === 0) {
+                delete orderData[itemId];
+            } else {
+                orderData[itemId] = newQty;
+            }
+            
+            // Update UI
+            document.getElementById(`qty-${itemId}`).textContent = newQty;
+            
+            // Update card style
+            const card = document.getElementById(`menu-${itemId}`);
+            if (newQty > 0) {
+                card.classList.add('has-items');
+            } else {
+                card.classList.remove('has-items');
+            }
+            
+            updateSubmitButton();
+        }
+
+        // Update submit button
+        function updateSubmitButton() {
+            const totalItems = Object.values(orderData).reduce((sum, qty) => sum + qty, 0);
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (totalItems > 0) {
+                submitBtn.textContent = `ส่งออเดอร์ (${totalItems} รายการ)`;
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.textContent = 'ส่งออเดอร์ (0 รายการ)';
+                submitBtn.disabled = true;
+            }
+        }
+
+        // Submit order
+        async function submitOrder() {
+            if (!userProfile) {
+                showToast('กรุณาเข้าสู่ระบบก่อน', 'error');
+                return;
+            }
+
+            const orders = Object.entries(orderData).map(([itemId, qty]) => {
+                const item = MENU_ITEMS.find(m => m.id === parseInt(itemId));
+                return {
+                    item: item.name,
+                    qty: qty
+                };
+            });
+
+            if (orders.length === 0) {
+                showToast('กรุณาเลือกสินค้าอย่างน้อย 1 รายการ', 'error');
+                return;
+            }
+
+            const payload = {
+                userId: userProfile.userId,
+                displayName: userProfile.displayName,
+                orders: orders,
+                timestamp: new Date().toISOString()
+            };
+
+            // Disable submit button
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'กำลังส่ง...';
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    showToast('ส่งออเดอร์สำเร็จ!', 'success');
+                    setTimeout(() => {
+                        liff.closeWindow();
+                    }, 1500);
+                } else {
+                    throw new Error('Failed to submit order');
+                }
+            } catch (error) {
+                console.error('Error submitting order:', error);
+                showToast('ส่งไม่สำเร็จ ลองใหม่อีกครั้ง', 'error');
+                submitBtn.disabled = false;
+                updateSubmitButton();
+            }
+        }
+
+        // Show toast message
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initializeLiff();
+        });
+    </script>
+</body>
+</html>
