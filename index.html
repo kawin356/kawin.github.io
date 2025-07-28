@@ -316,7 +316,14 @@
                     document.getElementById('userInfo').textContent = `สวัสดี, ${userProfile.displayName}`;
                 } catch (profileError) {
                     console.error('Error getting profile:', profileError);
-                    document.getElementById('userInfo').textContent = 'สวัสดี, ผู้ใช้งาน';
+                    // Check if opened in external browser
+                    if (!liff.isInClient()) {
+                        document.getElementById('userInfo').textContent = 'กรุณาเปิดผ่าน LINE App';
+                        showToast('กรุณาเปิดลิงก์นี้ผ่าน LINE App เท่านั้น', 'error');
+                    } else {
+                        document.getElementById('userInfo').textContent = 'สวัสดี, ผู้ใช้งาน';
+                        showToast('ไม่สามารถดึงข้อมูลผู้ใช้ได้', 'error');
+                    }
                 }
                 
                 // Initialize menu
