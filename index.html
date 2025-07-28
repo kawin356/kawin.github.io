@@ -278,16 +278,29 @@
         // Initialize LIFF
         async function initializeLiff() {
             try {
+                console.log('Starting LIFF initialization...');
                 await liff.init({ liffId: LIFF_ID });
+                console.log('LIFF initialized successfully');
+                
+                // Check if running in LINE app
+                console.log('Is in LINE app:', liff.isInClient());
+                console.log('Is logged in:', liff.isLoggedIn());
                 
                 if (!liff.isLoggedIn()) {
+                    console.log('User not logged in, redirecting to login...');
                     liff.login();
                     return;
                 }
 
                 // Get user profile
-                userProfile = await liff.getProfile();
-                document.getElementById('userInfo').textContent = `สวัสดี, ${userProfile.displayName}`;
+                try {
+                    userProfile = await liff.getProfile();
+                    console.log('User profile:', userProfile);
+                    document.getElementById('userInfo').textContent = `สวัสดี, ${userProfile.displayName}`;
+                } catch (profileError) {
+                    console.error('Error getting profile:', profileError);
+                    document.getElementById('userInfo').textContent = 'สวัสดี, ผู้ใช้งาน';
+                }
                 
                 // Initialize menu
                 initializeMenu();
@@ -298,8 +311,21 @@
                 document.getElementById('submitSection').style.display = 'block';
                 
             } catch (error) {
-                console.error('LIFF initialization failed', error);
-                showToast('เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+                console.error('LIFF initialization failed:', error);
+                console.error('Error details:', error.message);
+                
+                // Show error message
+                document.getElementById('loadingSection').innerHTML = `
+                    <p style="color: #ff4444; margin: 20px;">
+                        เกิดข้อผิดพลาด: ${error.message || 'ไม่สามารถเชื่อมต่อ LINE LIFF'}
+                    </p>
+                    <p style="font-size: 14px; color: #666;">
+                        กรุณาตรวจสอบ:<br>
+                        1. เปิดผ่าน LINE app<br>
+                        2. LIFF ID ถูกต้อง<br>
+                        3. LIFF app ถูก deploy แล้ว
+                    </p>
+                `;
             }
         }
 
